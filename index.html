@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Type Ahead 👀</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <form class="search-form">
+    <input type="text" class="search" placeholder="City or State">
+    <ul class="suggestions">
+      <li>Filter for a city</li>
+      <li>or a state</li>
+    </ul>
+  </form>
+<script>
+const endpoint = 'https://gist.githubusercontent.com/Miserlou/c5cd8364bf9b2420bb29/raw/2bf258763cdddd704f8ffd3ea9a3e81d25e2c6f6/cities.json';
+
+const cities = []; //This is to set up an array to put the cities into.
+fetch(endpoint)
+  .then(blob => blob.json())
+  .then(data => cities.push(...data));
+
+// The fetch is a promise which means it will eventually bring the data from the array. After that we use .then to tell it what to do with the data. We then use the blob arrow function to bring back another promise to let it know that we are retreiving JSON data. We then use the data arrow function to push the data into the cities array and spread it in.
+
+function findMatches(wordToMatch, cities) {
+  return cities.filter(place => {
+    // here we need to figure out if the city or state matches what was searched
+    const regex = new RegExp(wordToMatch, 'gi');
+    // This is a way to add a variable into an expression. That is why we used this syntax with the RedExp word. We pass in the wordToMatch which is whatever the person types in the search box and the 'g' global and 'i' insensitive flags. Global is to search thru everything and insensitive means it doesnt matter if it is capital or lower case.
+    return place.city.match(regex) || place.state.match(regex)
+    // this will return either the city or state that is input and run the function if either is true.
+  });
+}
+
+function numberWithCommas(x) {
+  return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+} //This is what gives it commas to display the data to the user
+
+function displayMatches() {
+  const matchArray = findMatches(this.value, cities);
+  const html = matchArray.map(place => {
+    const regex = new RegExp(this.value, 'gi');
+    const cityName = place.city.replace(regex, `<span class="hl">${this.value}</span>`); // This is to give it the highlight effect
+    const stateName = place.state.replace(regex, `<span class="hl">${this.value}</span>`); // This is to give it the highlight effect
+    return `
+      <li>
+        <span class="name">${cityName}, ${stateName}</span>
+        <span class="population">${numberWithCommas(place.population)}</span>
+      </li>
+    `;
+  }).join('');
+  suggestions.innerHTML = html;
+}
+// Whenever we type in it will run displayMatches, call the findMatches function and find ones that match what was typed. We then use html to display the information to the user. We map thru the array and return the city, state and population. We use join at the end to turn it from an array with multiple items to one big string.
+
+const searchInput = document.querySelector('.search');
+const suggestions = document.querySelector('.suggestions');
+ // Used inspect to find the class of the element that we will be working with & targeted it with queryselector.
+
+searchInput.addEventListener('change', displayMatches);
+// We are going to listen for the change event and when the input changes we are going to run the displayMatches function. The change event only works when you click off the search box.
+searchInput.addEventListener('keyup', displayMatches);
+// The key up event allows it to run regardless of whether you click off the search box or not.
+
+</script>
+  </body>
+</html>
